@@ -2,6 +2,7 @@ var express = require('express');
 var http = require('request');
 var app = express();
 var bodyParser = require('body-parser');
+var serviceUri = process.env.ANUKO_URI || 'https://timetracker.anuko.com';
 
 app.set('port', (process.env.PORT || 5000));
 
@@ -12,11 +13,11 @@ app.get('/', function(request, response) {
 });
 
 app.post('/track-time', function(request, response) {
-  http.post({ uri: 'https://timetracker.anuko.com/login.php', jar: true, form: { login: request.body.login, password: request.body.password } }, 
+  http.post({ uri: serviceUri+'/login.php', jar: true, form: { login: request.body.login, password: request.body.password } }, 
     function(err, loginResponse) {
       if(err) { console.log(err); response.status(500).send('An error has occured. Please check the log for details.'); return; }
       if(loginResponse.statusCode > 399) { response.status(500).send('anuko login failed'); console.log(loginResponse); return; }
-      http.get({ uri: 'https://timetracker.anuko.com/projects.php', jar: true },
+      http.get({ uri: serviceUri+'/projects.php', jar: true },
         function(err, projectsResponse) {
           if(err) { console.log(err); response.status(500).send('An error has occured. Please check the log for details.'); return; }
           if(projectsResponse.statusCode > 399) { response.status(500).send('anuko project listing failed'); console.log(projectsResponse); return; }
@@ -25,7 +26,7 @@ app.post('/track-time', function(request, response) {
           var projectIdOffset = projectsResponse.body.indexOf('id=', projectLabelOffset);
           var projectIdEndOffset = projectsResponse.body.indexOf('"', projectIdOffset);
           var projectId = projectsResponse.body.substring(projectIdOffset+3, projectIdEndOffset);
-          http.post({ uri: 'https://timetracker.anuko.com/time.php', jar: true, form: {
+          http.post({ uri: serviceUri+'/time.php', jar: true, form: {
               project: projectId,
               start: request.body.start,
               finish: request.body.finish,
