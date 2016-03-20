@@ -19,26 +19,40 @@ app.post('/track-time', function(request, response) {
       if(loginResponse.statusCode > 399) { response.status(500).send('anuko login failed'); console.log(loginResponse); return; }
       http.get({ uri: serviceUri+'/projects.php', jar: true },
         function(err, projectsResponse) {
+
           if(err) { console.log(err); response.status(500).send('An error has occured. Please check the log for details.'); return; }
           if(projectsResponse.statusCode > 399) { response.status(500).send('anuko project listing failed'); console.log(projectsResponse); return; }
           var projectLabelOffset = projectsResponse.body.indexOf("<td>"+request.body.project+"</td>");
+
           if(projectLabelOffset === -1) { response.status(400).send('invalid project name'); return; }
           var projectIdOffset = projectsResponse.body.indexOf('id=', projectLabelOffset);
           var projectIdEndOffset = projectsResponse.body.indexOf('"', projectIdOffset);
           var projectId = projectsResponse.body.substring(projectIdOffset+3, projectIdEndOffset);
-          http.post({ uri: serviceUri+'/time.php', jar: true, form: {
-              project: projectId,
-              start: request.body.start,
-              finish: request.body.finish,
-              duration: request.body.duration,
-              date: request.body.date,
-              note: request.body.note,
-              btn_submit: 'Submit',
-              browser_today: request.body.date
-            }, qs: { date: request.body.date }}, function(err, timeResponse) {
-              if(err) { console.log(err); response.status(500).send('An error has occured. Please check the log for details.'); return; }
-              if(timeResponse.statusCode > 399) { response.status(500).send('anuko time track failed'); console.log(timeResponse); return; }
-              response.send('time tracked');
+          
+          http.get({ uri: serviceUri+'/tasks.php', jar: true },
+            function(err, tasksResponse) {
+
+            var taskLabelOffset = tasksResponse.body.indexOf("<td>"+request.body.task+"</td>");
+            if(taskLabelOffset === -1) { response.status(400).send('invalid task name'); return; }
+            var taskIdOffset = tasksResponse.body.indexOf('id=', taskLabelOffset);
+            var taskIdEndOffset = tasksResponse.body.indexOf('"', taskIdOffset);
+            var taskId = tasksResponse.body.substring(taskIdOffset+3, taskIdEndOffset);
+
+            http.post({ uri: serviceUri+'/time.php', jar: true, form: {
+                project: projectId,
+                task: taskId,
+                start: request.body.start,
+                finish: request.body.finish,
+                duration: request.body.duration,
+                date: request.body.date,
+                note: request.body.note,
+                btn_submit: 'Submit',
+                browser_today: request.body.date
+              }, qs: { date: request.body.date }}, function(err, timeResponse) {
+                if(err) { console.log(err); response.status(500).send('An error has occured. Please check the log for details.'); return; }
+                if(timeResponse.statusCode > 399) { response.status(500).send('anuko time track failed'); console.log(timeResponse); return; }
+                response.send('time tracked');
+              });
             });
         });
     });
