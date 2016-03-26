@@ -29,14 +29,15 @@ app.post('/track-time', function(request, response) {
           var projectIdEndOffset = projectsResponse.body.indexOf('"', projectIdOffset);
           var projectId = projectsResponse.body.substring(projectIdOffset+3, projectIdEndOffset);
           
-          http.get({ uri: serviceUri+'/tasks.php', jar: true },
+          http.get({ uri: serviceUri+'/time.php', jar: true },
             function(err, tasksResponse) {
 
-            var taskLabelOffset = tasksResponse.body.indexOf("<td>"+request.body.task+"</td>");
-            if(taskLabelOffset === -1) { response.status(400).send('invalid task name'); return; }
-            var taskIdOffset = tasksResponse.body.indexOf('id=', taskLabelOffset);
-            var taskIdEndOffset = tasksResponse.body.indexOf('"', taskIdOffset);
-            var taskId = tasksResponse.body.substring(taskIdOffset+3, taskIdEndOffset);
+            var r = new RegExp('^\\s+task_names\\[(\\d+)\\] = "' + request.body.task + '";$', 'm');
+            var tmp = tasksResponse.body.match(r);
+
+            if (tmp === null) { response.status(400).send('invalid task name'); return; }
+
+            var taskId = tmp[1];
 
             http.post({ uri: serviceUri+'/time.php', jar: true, form: {
                 project: projectId,
