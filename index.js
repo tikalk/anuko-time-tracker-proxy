@@ -28,9 +28,7 @@ app.post('/track-time', function(request, response) {
           var projectIdOffset = projectsResponse.body.indexOf('id=', projectLabelOffset);
           var projectIdEndOffset = projectsResponse.body.indexOf('"', projectIdOffset);
           var projectId = projectsResponse.body.substring(projectIdOffset+3, projectIdEndOffset);
-console.log('project id offset is %s',projectIdOffset);       
-console.log('project id end offset is %s',projectIdEndOffset);       
-console.log('project id is %s',projectId);       
+
           http.get({ uri: serviceUri+'/time.php', jar: true },
             function(err, tasksResponse) {
 
