@@ -42,7 +42,7 @@ app.post('/track-time', function(request, response) {
               finish: request.body.finish,
               duration: request.body.duration,
               date: request.body.date,
-              note: request.body.note,
+              note: 'Submitted from Slack',
               btn_submit: 'Submit',
               browser_today: request.body.date
             }, qs: { date: request.body.date }}, function(err, timeResponse) {
